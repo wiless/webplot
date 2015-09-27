@@ -1,0 +1,19 @@
+.modal-draggable .modal-backdrop {
+  position: fixed;
+}
+
+.modal.modal-draggable {
+    overflow: overflow-y;
+}
+
+.modal-draggable .modal-header:hover {
+  cursor: move;
+}
+
+.c3-axis-y .tick{
+color: #FE7E0D;
+}
+
+.c3-axis-y .label{
+	color:red;
+}
