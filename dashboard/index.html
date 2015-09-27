@@ -1,0 +1,242 @@
+<html><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script type="text/javascript" src="js/jquery.min.js"></script>
+  <script type="text/javascript" src="js/bootstrap.min.js"></script>
+  <link rel="stylesheet" href="css/bootstrap.min.css">
+  <link href="css/font-awesome.min.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="css/bootstrap-paper.min.css">
+  
+  <link href="css/c3.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="css/extra.css">
+
+  <!-- Load d3.js and c3.js -->
+  <script src="js/d3.min.js" charset="utf-8"></script>
+  <script src="js/c3.min.js"></script>
+  <script src="js/matlab.js"></script>
+  <script src="js/saveSvgAsPng.js"></script>
+  
+  <script type="text/javascript">
+  var ws ;
+  var chart1;
+
+  var chart2;
+  var xlabel={text:"t (s)",position:'outer-center'};
+  var ylabel={text:"Amplitude",position: 'outer-middle'};
+  var tickobj={ format: expTicks};
+  var axisobj={x:{label:xlabel,tick:tickobj},y:{label:ylabel}}; //{x:{tick:{format:d3.format("%3f")}} };
+  // $("body").onload = init();
+  function init(){
+  console.log("What",document.domain);
+  $("#remoteaddress").val(document.domain);
+  AutoConnect ();
+  // DoPlot();
+
+  }
+  var xv = 1;
+  var cnt=0;
+
+
+function SaveAsPng(){
+  elem=$("svg")[0];
+  saveSvgAsPng(elem,"diagram.png")
+}
+
+  function NewFigure(){
+
+
+  var x=new Array(100);
+  var y=new Array(100);
+  pi=3.141;
+  Freq=1;
+  Ts=1.0/(30*Freq);
+  for (var i = 0; i < x.length; i++) {
+  
+  t=i*Ts ;
+  x[i]=t;
+  y[i]=Math.sin(2*pi*t*Freq)+Math.random();
+  };
+ 
+
+    PlotSineWave(x,y);
+    
+  }
+
+  function AddMore() {
+  
+  holdon=document.getElementById("holdon").checked;  
+  
+  var randpoints=[];
+  for (var i = 0; i < 100; i++) {
+  randpoints.push(Math.random());
+  }
+  if (!holdon) {
+    chart1=c3.generate({bindto:"#figure1",data:{columns:[]},axis:axisobj,grid:{x:{show:true},y:{show:true}}});
+     chart2=c3.generate({bindto:"#figure2",data:{columns:[]},axis:axisobj,grid:{x:{show:true},y:{show:true}},onrendered: function () { 
+      // $("#dlgFig1").modal();
+      console.log('rendered...');
+    }});
+
+  }
+
+
+    // chart2=c3.generate({bindto:"#figure2",data:{columns:[]},axis:axisobj,grid:{x:{show:true},y:{show:true}},onrendered: function () { $("#dlgFig1").modal();console.log('rendered...')}});
+
+  randpoints.unshift('Noise'+cnt);
+  cnt++;
+
+  chart1.load({
+  columns: [randpoints]  
+  });
+
+  
+
+  chart2.load({
+  columns: [randpoints]  
+  });
+ 
+  // chart1.load({});
+
+  
+  }
+
+  function CreateFigure() {
+  
+  holdon=document.getElementById("holdon").checked;  
+  
+  var randpoints=[];
+  for (var i = 0; i < 50; i++) {
+  randpoints.push(Math.random());
+  }
+  if (!holdon) {
+    chart1=c3.generate({bindto:"#figure1",data:{columns:[]},axis:axisobj,grid:{x:{show:true},y:{show:true}}});
+     chart2=c3.generate({bindto:"#figure2",data:{columns:[]},axis:axisobj,grid:{x:{show:true},y:{show:true}},onrendered: function () { $("#dlgFig1").modal();console.log('rendered...')}});
+
+  }
+
+
+    // chart2=c3.generate({bindto:"#figure2",data:{columns:[]},axis:axisobj,grid:{x:{show:true},y:{show:true}},onrendered: function () { $("#dlgFig1").modal();console.log('rendered...')}});
+
+  randpoints.unshift('Noise'+cnt);
+  cnt++;
+
+  chart1.load({
+  columns: [randpoints]  
+  });
+
+  
+
+  chart2.load({
+  columns: [randpoints]  
+  });
+ 
+  // chart1.load({});
+
+  
+  }
+  function expTicks(v){
+  t=v  ;
+  return t.toFixed(2)  ;
+  }
+  function plot(xvals,yvals)  {
+  
+  // console.log("plot",xvals,yvals);
+  xcol=xvals;
+  ycol=yvals;
+  xcol.unshift('t');
+  ycol.unshift('sineWave');
+  
+  dataobj={columns:[xcol,ycol],x:'t'};
+  
+  // label={}
+  console.log(dataobj);
+  chart1 = c3.generate({
+  bindto:"#figure1",
+  data:dataobj,
+  axis:axisobj,
+  grid:{x:{show:true},y:{show:true}}
+  }
+  );
+ 
+
+   
+  }
+  // $("#IPAddr").val(document.domain);
+  function DoPlot() {
+  var x=new Array(100);
+  var y=new Array(100);
+  pi=3.141;
+  Freq=1;
+  Ts=1.0/(30*Freq);
+  for (var i = 0; i < x.length; i++) {
+  
+  t=i*Ts ;
+  x[i]=t;
+  y[i]=Math.sin(2*pi*t*Freq);
+  };
+  plot(x,y);
+  
+  }
+
+  function AutoConnect() {
+  
+  
+  address=document.domain;
+  ws = new WebSocket("ws://"+address+":9999");
+  ws.onopen = function() {
+
+$("#connect").removeClass('btn-warning').addClass("btn-success");
+  $("#statusicon").removeClass("glyphicon-time");
+  $("#statusicon").removeClass("glyphicon-thumbs-down").addClass("glyphicon-ok");
+  console.log('Socket Status: ' + ws.readyState + " :" + ' opened');
+  };
+  ws.onmessage = RxCommand;
+  ws.onclose = function() {
+
+  $("#connect").removeClass('btn-success').addClass("btn-warning");
+ 
+
+  $("#statusicon").removeClass("glyphicon-time");
+  console.log('Socket Status: ' + ws.readyState + " :" + ' Closed');
+  $("#statusicon").removeClass("glyphicon-ok").addClass("glyphicon-thumbs-down");
+  };
+  }
+  function RxCommand(msg) {
+
+   t=document.getElementById("myconsole");
+   // $("#myconsole").append(msg.data);
+   // t.value+=msg.data;
+    plotcmd=JSON.parse(msg.data);
+
+    d = new Date();
+    tstampe=d.toLocaleTimeString();
+    t.value+="\n "+ tstampe+" ["+plotcmd.Handle+"]"+JSON.stringify(plotcmd.Options);
+    NewPlot(plotcmd);
+
+  //                           console.log(msg.Value);
+  // var x = JSON.parse(msg.data);
+  // addpoint(x.Value);
+  };
+  </script>
+</head>
+<body onload="init()">
+  <div class="jumbotron">
+    <div class="container">
+      <h1>WebPlot Session Dashboard  </h1>
+     
+       <button id="connect" type="button" class="btn btn-warning" onclick="AutoConnect()">Status <span id="statusicon" class="glyphicon glyphicon-time"> </span>  </button>
+      <p> About...  </p>      
+      <p class="text-danger"> Do NOT CLOSE THIS TAB</p>
+      <p>
+        <a class="btn btn-primary btn-lg">Learn more</a>
+      </p>
+    </div>
+  </div>
+  <div class="container">
+<textarea  id="myconsole" class="form-control" rows="10" style="background-color:black;color:yellow" ></textarea>    
+  </div>
+<footer>
+  Nothing here
+</footer>
+
+</body></html>

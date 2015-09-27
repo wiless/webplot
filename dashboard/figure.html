@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Empty Figure</title>
+
+
+	<!-- jQuery -->
+	<script src="js/jquery.min.js"></script>
+	<!-- Bootstrap JavaScript -->
+	<script src="js/bootstrap.min.js"></script>
+
+	 <script src="js/saveSvgAsPng.js"></script>
+ 
+
+	<!-- Bootstrap CSS -->
+	<link href="css/bootstrap.min.css" rel="stylesheet">
+
+	<!-- USE THIS FOR LIGHT  -->
+	<link href="css/bootstrap-paper.min.css" rel="stylesheet">
+	<link href="css/c3.css" rel="stylesheet">
+
+<script type="text/javascript">
+
+
+function SaveAsPng(){
+  elem=$("svg")[0];
+  saveSvgAsPng(elem,"diagram.png")
+}
+	function Resized(){
+		console.log("Resized");
+		// char.show()
+	}
+</script>
+	<!-- USE THIS FOR DARK  -->
+<!-- <link href="css/bootstrap-darkly.min.css" rel="stylesheet">
+	<link href="css/c3-dark.css" rel="stylesheet">
+ 
+ -->	
+		 
+		</head>
+		<body>
+			<!-- <h1 class="text-center"></h1> -->
+			<!-- <div class="container"> -->
+ 
+
+			<div class="container-fluid">
+ 
+		
+
+<div class="panel panel-default" onresize="Resized()">
+	  <div class="panel-heading">
+			<h3 class="panel-title">Figure</h3>
+	  </div>
+	   
+	  <div class="panel-body container-fluid" >
+			<div id="figurebox" > 				</div>
+	  </div>
+	       <div class="panel-footer">     <button type="button" class="btn btn-warning" onclick="SaveAsPng()">Save As PNG</button>             </div>
+        
+</div>
+
+</div>
+
+	
+
+
+		</body>
+		</html>
