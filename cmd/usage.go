@@ -12,15 +12,15 @@ func main() {
 
 	log.Println("Reading after init")
 
-	// go func() {
-	// 	s := wm.NewSession("HETNET")
+	go func() {
+		s := wm.NewSession("HETNET")
 
-	// 	for i := 0; i < 10; i++ {
+		for i := 0; i < 10; i++ {
 
-	// 		s.Plot(vlib.RandUFVec(10), "holdon", "title=CDF Plot of received signal", "LineWidth=2")
-	// 		time.Sleep(5 * time.Second)
-	// 	}
-	// }()
+			s.Plot(vlib.RandUFVec(10), "holdon", "title=CDF Plot of received signal", "LineWidth=2")
+			time.Sleep(5 * time.Second)
+		}
+	}()
 	time.Sleep(4 * time.Second)
 	s := wm.NewSession("Single Cell")
 	nsamples := 50
@@ -28,7 +28,7 @@ func main() {
 	for i := 0; i < nsamples; i++ {
 		x[i] = float64(i) * 10
 	}
-	NPLOTS := 5
+	NPLOTS := 3
 	for i := 0; i < NPLOTS; i++ {
 
 		// s.Plot(vlib.RandUFVec(10), "handle=4", "holdon", "title=CDF Plot of received signal", "style=+", "LineWidth=2")
