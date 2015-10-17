@@ -13,4 +13,10 @@ Matlab like interface for plotting, uses c3js
 go get github.com/wiless/webplot
 ```
 
-**Using in Package**
+**Start Session**
+- Start the Server
+
+- Open the dashboard
+
+
+**Run the example**
