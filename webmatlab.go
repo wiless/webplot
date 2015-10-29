@@ -288,9 +288,9 @@ func (m *MatlabSession) Connect() {
 	}
 	// Say hello to the matlab shell
 
-	n, err := m.matlabshell.Write([]byte("Matlab Connecting... !"))
+	// n, err := m.matlabshell.Write([]byte("Matlab Connecting... !"))
 
-	log.Printf("Wrote %d writing Error %v ", n, err)
+	// log.Printf("Wrote %d writing Error %v ", n, err)
 	// var msg = make([]byte, 512)
 	// if n, err = m.matlabshell.Read(msg); err != nil {
 	// 	log.Fatal(err)
@@ -311,7 +311,7 @@ func (m *MatlabSession) Listen() {
 		case plotcmd := <-m.CMDWindow:
 			if m.matlabshell != nil {
 
-				log.Printf("Listen :: Read from Channel %v", plotcmd.Options.Title)
+				// log.Printf("Listen :: Read from Channel %v", plotcmd.Options.Title)
 				data, err := json.Marshal(plotcmd)
 				if err != nil {
 					log.Println("Json Marshal Err is ", err)
@@ -323,14 +323,15 @@ func (m *MatlabSession) Listen() {
 
 					// m.matlabshell.Write([]byte("Hello again .. "))
 					if n > 0 {
-
-						log.Printf("Attempting %d bytes [Error %v]", n, err)
 						if err != nil {
+							log.Printf("Unable to Write %dbytes Matlab/Plot Server :%v", n, err)
 							m.matlabshell = nil
 						}
 
 					}
 				}
+			} else {
+				log.Printf("Skipping to write to Matlab/Plot Server")
 			}
 			// default:
 			// log.Println("Waited for you")
@@ -380,7 +381,7 @@ func (m *MatlabSession) Plot(y vlib.VectorF, params ...string) int {
 	p.Handle = p.Options.handle
 	p.HoldOn = p.Options.holdOn ///
 	p.Options.Title = "[ " + m.prefix + " ] " + p.Options.Title
-	log.Printf("Write to Channel %#v", p.Options.Title)
+	// log.Printf("Write to Channel %#v", p.Options.Title)
 	m.CMDWindow <- p
 	// SessionCommand <- p
 	return p.Handle

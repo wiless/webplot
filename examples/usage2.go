@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"time"
 
@@ -11,16 +10,16 @@ import (
 
 func main() {
 
-	log.Println("Reading after init")
+	// log.Println("Reading after init")
 	time.Sleep(4 * time.Second)
 	// go func() {
 	s := wm.NewSession("SSK Demo")
 	// time.Sleep(4 * time.Second)
 	log.Println("sending plot")
 	for i := 0; i < 5; i++ {
-		fmt.Printf("Start plot")
+		// fmt.Printf("Start plot")
 		s.Plot(vlib.RandUFVec(10), "handle=1", "holdon", "title=CDF Plot of received signal", "LineWidth=2")
-		fmt.Printf("Writing command")
+		log.Println("Sent Plot ", i)
 		time.Sleep(1 * time.Second)
 	}
 
