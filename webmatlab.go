@@ -262,14 +262,15 @@ type MatlabSession struct {
 
 // Starts a session and triggers the browser pointing to dashboard
 func NewDashboard(name string) *MatlabSession {
+
 	result := &MatlabSession{}
-
-	if !CheckActiveSession() {
-
-		cmd := exec.Command("xdg-open", "http://localhost:8888")
-		cmd.Output()
-		log.Println("Client Ready")
-	}
+	result.CMDWindow = make(chan PlotInfo)
+	result.Connect() // Connects to the MatSocket
+	go result.Listen()
+	// socket server not ready has to trigger or give wait time..
+	cmd := exec.Command("xdg-open", "http://localhost:8888")
+	cmd.Output()
+	log.Println("Client Ready")
 	result.prefix = name
 	return result
 }
