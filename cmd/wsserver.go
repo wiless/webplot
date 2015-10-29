@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"math/rand"
 	"net/http"
@@ -20,18 +19,17 @@ import (
 )
 
 var ch chan bool
-
 var activePlotter *websocket.Conn
 
 func init() {
 
 	http.Handle("/", websocket.Handler(socketListener))
-	http.Handle("/matsock", websocket.Handler(handleMatlabCommands))
 	// http.HandleFunc("/series", FetchSeries)
 
 	// go func() {
 	addr := "ws://localhost:9999/"
 	log.Println("Plot Server listening at ", addr)
+
 	err := http.ListenAndServe(":9999", nil)
 	if err != nil {
 		fmt.Println("Error ", err)
@@ -110,6 +108,8 @@ type PlotInfo struct {
 
 func socketListener(ws *websocket.Conn) {
 
+	// var fa FeedArray
+	// SubscriberLists[ws] = fa
 	for {
 
 		log.Printf("Connection Opened from %v", ws.RemoteAddr())
@@ -162,25 +162,33 @@ func socketListener(ws *websocket.Conn) {
 			}
 
 		}
+		// {
+
+		// for {
+		// 	msg := make([]byte, 1024)
+		// 	n, _ := ws.Read(msg)
+		// 	if n > 0 {
+		// 		log.Printf("Read Message  %s", msg[:n])
+
+		// 		var f FeedInfo
+		// 		jerr := json.Unmarshal(msg[0:n], &f)
+		// 		if jerr == nil {
+		// 			fa = append(fa, f)
+		// 			SubscriberLists[ws] = fa
+		// 			log.Printf("Updated subscriptions for %v with %v ", ws.RemoteAddr(), fa)
+		// 		} else {
+		// 			fmt.Println("Error in Unmarshalling ", jerr, " See text ", string(msg[:n]))
+		// 			f.ID = 0
+		// 			f.FieldNames = []string{"Dummy"}
+		// 			fa = append(fa, f)
+		// 			SubscriberLists[ws] = fa
+		// 			log.Printf("DUMMY Updated subscriptions (%v) for %v with %v ", ws, ws.RemoteAddr(), fa)
+
+		// 		}
+		// 	}
+
+		// }
+		// }
 
 	}
-}
-
-// Handles commands comming from Matlab Session objects and writes to the corresponding
-func handleMatlabCommands(ms *websocket.Conn) {
-	log.Printf("New Mat Client %s", ms.RemoteAddr())
-	io.Copy(activePlotter, ms)
-
-	// for {
-	// 	var msg []byte
-	// 	msg = make([]byte, 1024)
-	// 	// log.Printf("Trying to read..")
-	// 	n, err := ms.Read(msg)
-	// 	_ = err
-	// 	if n > 0 {
-	// 		log.Printf("WSServer Rx: %s", msg[0:n])
-	// 		activePlotter.Write(msg)
-	// 	}
-	// }
-	log.Println("Leaving session")
 }

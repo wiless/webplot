@@ -2,9 +2,8 @@ package wm
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
-	"net/http"
+	"os/exec"
 	"strconv"
 	"strings"
 
@@ -29,17 +28,18 @@ var (
 
 func init() {
 
-	http.Handle("/", websocket.Handler(socketListener))
+	// http.Handle("/", websocket.Handler(socketListener))
+	// http.Handle("/matsock", websocket.Handler(matsocketListener))
 	// http.HandleFunc("/series", FetchSeries)
-	activePlotter = nil
+	// activePlotter = nil
 	SessionCommand = make(chan PlotInfo)
-	go func() {
-		err := http.ListenAndServe(":9999", nil)
-		if err != nil {
-			fmt.Println("Error ", err)
-		}
-		ch <- true
-	}()
+	// go func() {
+	// 	err := http.ListenAndServe(":9999", nil)
+	// 	if err != nil {
+	// 		fmt.Println("Error ", err)
+	// 	}
+	// 	ch <- true
+	// }()
 
 }
 
@@ -254,15 +254,108 @@ func (p *PlotOption) Parse(param ...string) {
 }
 
 type MatlabSession struct {
-	prefix    string
-	CMDWindow chan PlotInfo
-	browsercn *websocket.Conn
+	prefix      string
+	CMDWindow   chan PlotInfo
+	browsercn   *websocket.Conn
+	matlabshell *websocket.Conn
+}
+
+// Starts a session and triggers the browser pointing to dashboard
+func NewDashboard(name string) *MatlabSession {
+	result := &MatlabSession{}
+
+	if !CheckActiveSession() {
+
+		cmd := exec.Command("xdg-open", "http://localhost:8888")
+		cmd.Output()
+		log.Println("Client Ready")
+	}
+	result.prefix = name
+	return result
+}
+
+func (m *MatlabSession) Connect() {
+
+	origin := "http://localhost/"
+	url := "ws://localhost:9999/matsock"
+	// url = "ws://localhost:12345/echo"
+	var err error
+	m.matlabshell, err = websocket.Dial(url, "", origin)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	// Say hello to the matlab shell
+
+	n, err := m.matlabshell.Write([]byte("Matlab Connecting... !"))
+
+	log.Printf("Wrote %d writing Error %v ", n, err)
+	// var msg = make([]byte, 512)
+	// if n, err = m.matlabshell.Read(msg); err != nil {
+	// 	log.Fatal(err)
+	// }
+	// fmt.Printf("Received: %s.\n", msg[:n])
+	// var msg = make([]byte, 512)
+	// var n int
+	// if n, err = ws.Read(msg); err != nil {
+	// 	log.Fatal(err)
+	// }
+	// fmt.Printf("Received: %s.\n", msg[:n])
+
+	// m.matlabshell=
+}
+func (m *MatlabSession) Listen() {
+	for {
+		select {
+		case plotcmd := <-m.CMDWindow:
+			if m.matlabshell != nil {
+
+				log.Printf("Listen :: Read from Channel %v", plotcmd.Options.Title)
+				data, err := json.Marshal(plotcmd)
+				if err != nil {
+					log.Println("Json Marshal Err is ", err)
+					break
+				} else {
+
+					// log.Println("Greeting again ..")
+					n, err := m.matlabshell.Write(data)
+
+					// m.matlabshell.Write([]byte("Hello again .. "))
+					if n > 0 {
+
+						log.Printf("Attempting %d bytes [Error %v]", n, err)
+						if err != nil {
+							m.matlabshell = nil
+						}
+
+					}
+				}
+			}
+			// default:
+			// log.Println("Waited for you")
+		}
+	}
 }
 
 func NewSession(name string) *MatlabSession {
 	result := &MatlabSession{}
-	if !CheckActiveSession() {
+	result.CMDWindow = make(chan PlotInfo)
+	result.Connect() // Connects to the MatSocket
+	go result.Listen()
+	// socket server not ready has to trigger or give wait time..
 
+	if !CheckActiveSession() {
+		// cmd := exec.Command("xdg-open", "http://localhost:8888")
+		// cmd.Output()
+		// log.Println("Client Ready")
+	}
+	result.prefix = name
+	return result
+}
+
+func NewSessionOld(name string) *MatlabSession {
+	result := &MatlabSession{}
+	if !CheckActiveSession() {
 		// cmd := exec.Command("xdg-open", "http://localhost:8888")
 		// cmd.Output()
 		// log.Println("Client Ready")
@@ -274,7 +367,7 @@ func NewSession(name string) *MatlabSession {
 func CheckActiveSession() bool {
 	/// Ideally check if there is already an active session
 	// Use Ping-pong to test
-	log.Println("activePlotter : ", activePlotter)
+	// log.Println("activePlotter : ", activePlotter)
 	return activePlotter != nil /// Not fool-proof
 }
 
@@ -286,12 +379,24 @@ func (m *MatlabSession) Plot(y vlib.VectorF, params ...string) int {
 	p.Handle = p.Options.handle
 	p.HoldOn = p.Options.holdOn ///
 	p.Options.Title = "[ " + m.prefix + " ] " + p.Options.Title
+	log.Printf("Write to Channel %#v", p.Options.Title)
+	m.CMDWindow <- p
+	// SessionCommand <- p
+	return p.Handle
+}
+func (m *MatlabSession) Scatter(y vlib.VectorF, params ...string) int {
+	var p PlotInfo
+	p.Y = y
+	p.Type = "scatter"
+	p.Options.Parse(params...)
+	p.Handle = p.Options.handle
+	p.HoldOn = p.Options.holdOn ///
+	p.Options.Title = "[ " + m.prefix + " ] " + p.Options.Title
 	log.Printf("Sending plot %#v", p.Options.Title)
 	// m.CMDWindow <- p
 	SessionCommand <- p
 	return p.Handle
 }
-
 func (m *MatlabSession) PlotXY(x, y vlib.VectorF, params ...string) int {
 	var p PlotInfo
 	p.X = x
@@ -302,9 +407,14 @@ func (m *MatlabSession) PlotXY(x, y vlib.VectorF, params ...string) int {
 	p.HoldOn = p.Options.holdOn ///
 	p.Options.Title = "[ " + m.prefix + " ] " + p.Options.Title
 	log.Printf("Sending plot %#v", p.Options.Title)
-	// m.CMDWindow <- p
-	SessionCommand <- p
+	m.CMDWindow <- p
+	//SessionCommand <- p
 	return p.Handle
+}
+func (m *MatlabSession) ScatterC(c vlib.VectorC, params ...string) int {
+
+	return m.PlotXY(c.Real(), c.Imag(), params...)
+
 }
 
 // func main() {
@@ -334,56 +444,56 @@ func (m *MatlabSession) PlotXY(x, y vlib.VectorF, params ...string) int {
 
 // }
 
-func socketListener(ws *websocket.Conn) {
+// func socketListener(ws *websocket.Conn) {
 
-	/// Allowing only one plotting session
-	// if activePlotter != nil {
-	// 	log.Printf("Denying  %v", ws.RemoteAddr())
-	// 	return
-	// }
+// 	/// Allowing only one plotting session
+// 	// if activePlotter != nil {
+// 	// 	log.Printf("Denying  %v", ws.RemoteAddr())
+// 	// 	return
+// 	// }
 
-	log.Printf("Connection Opened from %v", ws.RemoteAddr())
+// 	log.Printf("Connection Opened from %v", ws.RemoteAddr())
 
-	// var fa FeedArray
-	// SubscriberLists[ws] = fa
+// 	// var fa FeedArray
+// 	// SubscriberLists[ws] = fa
 
-	activePlotter = ws
-	// var msg []byte
-	// go func() {
-	// 	n, err := activePlotter.Read(msg)
-	// 	if err != nil {
-	// 		log.Println(err)
-	// 	}
-	// 	fmt.Printf("Found something %s", msg[0:n])
-	// }()
+// 	activePlotter = ws
+// 	// var msg []byte
+// 	// go func() {
+// 	// 	n, err := activePlotter.Read(msg)
+// 	// 	if err != nil {
+// 	// 		log.Println(err)
+// 	// 	}
+// 	// 	fmt.Printf("Found something %s", msg[0:n])
+// 	// }()
 
-	for {
+// 	for {
 
-		select {
-		case plotcmd := <-SessionCommand:
+// 		select {
+// 		case plotcmd := <-SessionCommand:
 
-			log.Printf("Received Matlab Command %#v", plotcmd.Options.Title)
-			data, err := json.Marshal(plotcmd)
-			log.Println("JSON Marshal Err is ", err)
+// 			log.Printf("Received Matlab Command %#v", plotcmd.Options.Title)
+// 			data, err := json.Marshal(plotcmd)
+// 			log.Println("JSON Marshal Err is ", err)
 
-			if err != nil {
-				log.Println("Err is ", err)
-				break
-			} else {
-				n, err := activePlotter.Write(data)
-				if err != nil {
-					activePlotter = nil
+// 			if err != nil {
+// 				log.Println("Err is ", err)
+// 				break
+// 			} else {
+// 				n, err := activePlotter.Write(data)
+// 				if err != nil {
+// 					activePlotter = nil
 
-				} else {
-					log.Printf("Wrote %d bytes [Error %v]", n, err)
+// 				} else {
+// 					log.Printf("Wrote %d bytes [Error %v]", n, err)
 
-				}
-			}
+// 				}
+// 			}
 
-		}
-		if ws == nil {
-			break
-		}
-	}
+// 		}
+// 		if ws == nil {
+// 			break
+// 		}
+// 	}
 
-}
+// }

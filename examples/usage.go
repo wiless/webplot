@@ -35,15 +35,14 @@ func main() {
 		if i < 2 {
 
 			if i == 1 {
-
 				s.PlotXY(x, vlib.RandUFVec(nsamples), "handle=4", "holdon", "title=CDF Plot of received signal", "LineWidth=2")
 			} else {
 				y := x.Add(5.5)
-				s.PlotXY(y, vlib.RandUFVec(nsamples), "handle=4", "holdff", "title=CDF Plot of received signal", "LineWidth=2")
+				s.PlotXY(y, vlib.RandUFVec(nsamples), "handle=4", "holdoff", "title=CDF Plot of received signal", "LineWidth=2")
 			}
 
 		} else {
-			s.Plot(vlib.RandUFVec(nsamples), "handle=4", "holdon", "title=CDF Plot of received signal", "style=+", "LineWidth=2")
+			s.Plot(vlib.RandUFVec(nsamples), "handle=3", "holdon", "title=CDF Plot of received signal", "style=+", "LineWidth=2")
 		}
 		time.Sleep(4 * time.Second)
 	}

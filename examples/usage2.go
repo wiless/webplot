@@ -1,0 +1,60 @@
+package main
+
+import (
+	"fmt"
+	"log"
+	"time"
+
+	"github.com/wiless/vlib"
+	"github.com/wiless/webplot"
+)
+
+func main() {
+
+	log.Println("Reading after init")
+	time.Sleep(4 * time.Second)
+	// go func() {
+	s := wm.NewSession("HETNET")
+
+	log.Println("sending plot")
+	for i := 0; i < 5; i++ {
+		fmt.Printf("Start plot")
+		s.Plot(vlib.RandUFVec(10), "holdon", "title=CDF Plot of received signal", "LineWidth=2")
+		fmt.Printf("Writing command")
+		time.Sleep(1 * time.Second)
+	}
+
+	s.Plot(vlib.RandUFVec(30), "handle=3", "holdoff", "title=SINR CDF", "LineWidth=2")
+
+	s.Plot(vlib.RandUFVec(30), "handle=6", "title=DIP CDF", "LineWidth=2")
+	time.Sleep(10 * time.Second)
+	// }()
+	// time.Sleep(4 * time.Second)
+	// s = wm.NewSession("Single Cell")
+	// nsamples := 50
+	// x := vlib.NewVectorF(nsamples)
+	// for i := 0; i < nsamples; i++ {
+	// 	x[i] = float64(i) * 10
+	// }
+	// NPLOTS := 3
+	// for i := 0; i < NPLOTS; i++ {
+
+	// 	// s.Plot(vlib.RandUFVec(10), "handle=4", "holdon", "title=CDF Plot of received signal", "style=+", "LineWidth=2")
+	// 	if i < 2 {
+
+	// 		if i == 1 {
+	// 			s.PlotXY(x, vlib.RandUFVec(nsamples), "handle=4", "holdon", "title=CDF Plot of received signal", "LineWidth=2")
+	// 		} else {
+	// 			y := x.Add(5.5)
+	// 			s.PlotXY(y, vlib.RandUFVec(nsamples), "handle=4", "holdoff", "title=CDF Plot of received signal", "LineWidth=2")
+	// 		}
+
+	// 	} else {
+	// 		s.Plot(vlib.RandUFVec(nsamples), "holdon", "title=CDF Plot of received signal", "style=+", "LineWidth=2")
+	// 	}
+	// 	time.Sleep(3 * time.Second)
+	// }
+
+	// wait if someone closes
+
+}

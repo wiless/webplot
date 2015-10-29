@@ -104,9 +104,11 @@ return chartobj;
 function PlotOnFigure(element,plotcmd) {
 	ycol=plotcmd.Y;
 	ycol.unshift('y1');
+	console.log("Check plot marker ",plotcmd.Options.Marker);
 	if (plotcmd.Options.Marker==""){
 		ptype="line";
 	}else{
+ 	console.log("Running scatter plot ");
 		ptype="scatter";
 	}
 	colorfn=function(c,d){
